@@ -1,0 +1,18 @@
+{
+  "id": "./",
+  "name": "Hianx 手机图床",
+  "short_name": "Hianx图床",
+  "description": "上传并管理 GitHub 图片和音频",
+  "lang": "zh-CN",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#f4f2fc",
+  "theme_color": "#7c3aed",
+  "icons": [
+    {"src": "./icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any"},
+    {"src": "./icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any"},
+    {"src": "./icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable"}
+  ]
+}

@@ -1,0 +1,156 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#7c3aed">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Hianx图床">
+  <meta name="description" content="Hianx 手机图床，上传并管理 GitHub 图片和音频">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png">
+  <title>Hianx · 手机图床</title>
+  <style>
+    :root{color-scheme:light;--purple:#7c3aed;--ink:#2d1b4e;--muted:#8a7aa8;--line:#eee8fb}
+    *{box-sizing:border-box}body{margin:0;background:#f4f2fc;color:var(--ink);font-family:system-ui,-apple-system,"Segoe UI",sans-serif;min-height:100vh;padding:env(safe-area-inset-top) 14px env(safe-area-inset-bottom)}
+    button,input{font:inherit}.app{width:min(100%,1000px);margin:0 auto;padding:14px 0 34px}
+    header{background:linear-gradient(145deg,#9b6bff,#6d28d9);color:#fff;border-radius:24px;padding:18px;box-shadow:0 10px 25px #7c3aed30}
+    .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.brand{font-size:23px;font-weight:750;letter-spacing:-.5px}.brand small{font-size:13px;font-weight:500;opacity:.8;margin-left:6px}
+    .head-actions{display:flex;gap:8px}.ghost,.primary,.danger,.soft{border:0;border-radius:999px;padding:10px 14px;font-weight:650;cursor:pointer}
+    .ghost{background:#ffffff25;color:white;border:1px solid #ffffff60}.primary{background:var(--purple);color:#fff}.danger{background:#fee2e2;color:#b91c1c}.soft{background:#eee8fb;color:var(--ink)}
+    .token{display:flex;gap:8px;margin-top:16px;background:#ffffffeb;border-radius:18px;padding:7px}.token input{min-width:0;flex:1;border:0;outline:0;background:transparent;padding:7px;color:var(--ink)}
+    .token button{border:0;border-radius:14px;background:var(--purple);color:white;padding:8px 14px;font-weight:650}
+    .note{font-size:12px;line-height:1.5;color:#f4eaff;margin:9px 3px 0}
+    .upload{margin:18px 0;background:#fff;border:2px dashed #d5c9f0;border-radius:22px;text-align:center;padding:28px 14px;position:relative}
+    .upload strong{display:block;font-size:17px}.upload p{font-size:12px;color:var(--muted);margin:7px 0 0}.upload input{position:absolute;inset:0;width:100%;height:100%;opacity:0;cursor:pointer}
+    .toolbar{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:24px 2px 12px}.toolbar h2{font-size:18px;margin:0}.count{font-size:13px;color:var(--purple);font-weight:700}
+    .progress{display:grid;gap:7px;margin:12px 0}.progress-item{background:#eee8fb;border-radius:14px;padding:10px 13px;display:flex;justify-content:space-between;gap:10px;font-size:13px}.progress-item span:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.ok{color:#059669}.err{color:#dc2626}
+    .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(145px,1fr));gap:12px}.card{background:#fff;border:1px solid var(--line);border-radius:18px;padding:10px;min-width:0;box-shadow:0 4px 14px #27134a08}
+    .media{aspect-ratio:1;background:#f8f6fe;border-radius:12px;overflow:hidden;display:grid;place-items:center;margin-bottom:9px}.media img{width:100%;height:100%;object-fit:cover}.media audio{width:95%}
+    .filename{font-size:12px;font-weight:650;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin:3px 0 8px}
+    .url{display:flex;gap:5px;background:#f8f6ff;border:1px solid var(--line);padding:4px;border-radius:12px}.url input{width:0;flex:1;min-width:0;border:0;background:transparent;font-size:10px;outline:0;color:var(--ink)}.url button{border:0;border-radius:9px;background:var(--purple);color:#fff;padding:6px 8px;font-size:11px}
+    .actions{display:flex;gap:6px;margin-top:8px}.actions button{flex:1;padding:7px 5px;font-size:11px}
+    .empty{grid-column:1/-1;text-align:center;color:var(--muted);padding:40px 10px;background:#fff;border-radius:18px}
+    footer{text-align:center;color:#a99abd;font-size:11px;margin:28px 0 8px}
+    .toast{position:fixed;left:50%;bottom:calc(22px + env(safe-area-inset-bottom));transform:translateX(-50%);background:#24143c;color:#fff;padding:11px 17px;border-radius:999px;font-size:13px;z-index:5;box-shadow:0 8px 25px #0002;max-width:90vw;text-align:center}
+    @media(min-width:700px){body{padding:24px}.app{padding-top:0}header{padding:22px 26px}.grid{grid-template-columns:repeat(auto-fill,minmax(190px,1fr))}}
+  </style>
+</head>
+<body>
+<main class="app">
+  <header>
+    <div class="top">
+      <div class="brand">📁 Hianx <small>手机图床</small></div>
+      <div class="head-actions"><button class="ghost" id="refresh">↻ 刷新</button></div>
+    </div>
+    <div class="token">
+      <input id="token" type="password" autocomplete="off" placeholder="GitHub Token（仅保存在本机）" aria-label="GitHub Token">
+      <button id="saveToken">保存</button>
+    </div>
+    <p class="note">Token 只保存在当前浏览器。建议使用仅授权此仓库 Contents 读写权限的 Fine-grained token。</p>
+  </header>
+
+  <section class="upload" id="dropzone">
+    <input id="files" type="file" multiple accept="image/*,audio/*,.svg,.ico,.bmp,.flac,.aac">
+    <strong>📤 点这里选择文件 / 拖拽上传</strong>
+    <p>支持常见图片和音频 · 可一次选择多个文件</p>
+  </section>
+  <div class="progress" id="progress" aria-live="polite"></div>
+  <div class="toolbar"><h2>🖼️ 图片与音频</h2><span class="count" id="count">0 个文件</span></div>
+  <section class="grid" id="gallery"><div class="empty">连接 GitHub 后加载图库</div></section>
+  <footer>文件托管于 GitHub · Hianx · 添加到主屏幕后可像 App 一样打开</footer>
+</main>
+<div id="toast" class="toast" hidden></div>
+<script>
+(() => {
+  'use strict';
+  const OWNER='yanzixianhualuo', REPO='Hianx', BRANCH='main';
+  const API=`https://api.github.com/repos/${OWNER}/${REPO}/contents`;
+  const CDN=`https://${OWNER}.github.io/${REPO}/`;
+  const $=id=>document.getElementById(id);
+  const tokenInput=$('token'), gallery=$('gallery'), progress=$('progress');
+  let token=localStorage.getItem('hianx_gh_token')||'';
+  tokenInput.value=token;
+  let toastTimer;
+  function toast(message){const el=$('toast');el.textContent=message;el.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.hidden=true,2600)}
+  function headers(){return {Authorization:`Bearer ${token}`,Accept:'application/vnd.github+json','X-GitHub-Api-Version':'2022-11-28'}}
+  function safeUrl(name){return CDN+name.split('/').map(encodeURIComponent).join('/')}
+  function element(tag,cls,text){const el=document.createElement(tag);if(cls)el.className=cls;if(text!==undefined)el.textContent=text;return el}
+  $('saveToken').addEventListener('click',()=>{
+    const value=tokenInput.value.trim();if(!value){toast('请先输入 Token');return}
+    token=value;localStorage.setItem('hianx_gh_token',value);toast('Token 已保存在本机');loadGallery();
+  });
+  async function listFiles(){
+    if(!token){toast('请先填写 GitHub Token');return null}
+    const response=await fetch(`${API}?ref=${encodeURIComponent(BRANCH)}&per_page=100`,{headers:headers(),cache:'no-store'});
+    if(!response.ok)throw new Error(`读取失败：HTTP ${response.status}`);
+    const data=await response.json();
+    return data.filter(item=>item.type==='file');
+  }
+  function makeCard(file){
+    const name=file.name,url=safeUrl(name),ext=name.split('.').pop().toLowerCase();
+    const card=element('article','card'),media=element('div','media');
+    if(['jpg','jpeg','png','gif','webp','svg','bmp','ico','avif'].includes(ext)){
+      const img=element('img');img.src=url;img.alt=name;img.loading='lazy';media.append(img);
+    }else if(['mp3','wav','m4a','ogg','flac','aac'].includes(ext)){
+      const audio=element('audio');audio.controls=true;audio.preload='none';audio.src=url;media.append(audio);
+    }else{media.append(element('span','','📄 文件'))}
+    card.append(media,element('div','filename',name));
+    const row=element('div','url'),input=element('input');input.value=url;input.readOnly=true;
+    const copy=element('button','', '复制');copy.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(url);toast('链接已复制')}catch{input.focus();input.select();toast('请长按链接复制')}});
+    row.append(input,copy);card.append(row);
+    const actions=element('div','actions'),open=element('button','soft','打开'),del=element('button','danger','删除');
+    open.addEventListener('click',()=>window.open(url,'_blank','noopener'));
+    del.addEventListener('click',async()=>{if(!confirm(`确定删除「${name}」吗？`))return;await deleteFile(file)});
+    actions.append(open,del);card.append(actions);return card;
+  }
+  async function loadGallery(){
+    gallery.replaceChildren(element('div','empty','正在加载图库…'));
+    try{
+      const files=await listFiles();if(!files)return;
+      $('count').textContent=`${files.length} 个文件`;gallery.replaceChildren();
+      if(!files.length){gallery.append(element('div','empty','✨ 暂无文件，上传一些图片或音频吧'));return}
+      files.forEach(file=>gallery.append(makeCard(file)));
+    }catch(error){gallery.replaceChildren(element('div','empty',error.message));toast(error.message)}
+  }
+  async function deleteFile(file){
+    try{
+      const response=await fetch(`${API}/${encodeURIComponent(file.name)}`,{method:'DELETE',headers:headers(),body:JSON.stringify({message:`删除 ${file.name}`,sha:file.sha,branch:BRANCH})});
+      if(!response.ok)throw new Error(`删除失败：HTTP ${response.status}`);
+      toast('文件已删除');loadGallery();
+    }catch(error){toast(error.message)}
+  }
+  const allowed=new Set(['jpg','jpeg','png','gif','webp','svg','bmp','ico','avif','mp3','wav','m4a','ogg','flac','aac']);
+  async function uploadOne(file){
+    const ext=file.name.split('.').pop().toLowerCase();
+    if(!allowed.has(ext)){addProgress(file.name,'不支持的格式','err');return}
+    const item=addProgress(file.name,'上传中…','');
+    try{
+      const base64=await new Promise((resolve,reject)=>{const reader=new FileReader();reader.onload=()=>resolve(String(reader.result).split(',')[1]);reader.onerror=()=>reject(reader.error);reader.readAsDataURL(file)});
+      const response=await fetch(`${API}/${encodeURIComponent(file.name)}`,{method:'PUT',headers:headers(),body:JSON.stringify({message:`上传 ${file.name}`,content:base64,branch:BRANCH})});
+      if(!response.ok){const body=await response.json().catch(()=>({}));throw new Error(body.message||`HTTP ${response.status}`)}
+      item.lastChild.textContent='✓ 上传成功';item.lastChild.className='ok';
+    }catch(error){item.lastChild.textContent=`✕ ${error.message}`;item.lastChild.className='err'}
+  }
+  function addProgress(name,status,cls){const row=element('div','progress-item'),n=element('span','',name),s=element('span',cls,status);row.append(n,s);progress.prepend(row);return row}
+  async function upload(files){
+    if(!token){toast('请先填写并保存 GitHub Token');return}
+    const list=Array.from(files);if(!list.length)return;
+    for(const file of list)await uploadOne(file);
+    await loadGallery();
+  }
+  $('files').addEventListener('change',e=>{upload(e.target.files);e.target.value=''});
+  $('refresh').addEventListener('click',loadGallery);
+  const zone=$('dropzone');
+  zone.addEventListener('dragover',e=>{e.preventDefault();zone.style.background='#f1edff'});
+  zone.addEventListener('dragleave',()=>zone.style.background='');
+  zone.addEventListener('drop',e=>{e.preventDefault();zone.style.background='';upload(e.dataTransfer.files)});
+  if('serviceWorker' in navigator && location.protocol==='https:'){
+    window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+  }
+  if(token)loadGallery();else toast('🔑 请设置 GitHub Token 以使用图床');
+})();
+</script>
+</body>
+</html>
